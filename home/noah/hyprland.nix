@@ -9,6 +9,11 @@
     portalPackage = null;
     systemd.enable = true;
 
+    # Klassisches Hyprlang-Format (hyprland.conf). Ab stateVersion 26.05 erzeugt
+    # Home Manager sonst eine Lua-Config (hyprland.lua), zu der die Syntax unten
+    # ($mod, bind = "...") nicht passt. Umstieg auf Lua ist später möglich.
+    configType = "hyprlang";
+
     settings = {
       "$mod" = "SUPER";
       "$terminal" = "kitty";
@@ -133,11 +138,9 @@
         ", XF86AudioPrev, exec, playerctl previous"
       ];
 
-      windowrule = [
-        "float, class:^(pavucontrol)$"
-        "float, class:^(blueman-manager)$"
-        "float, class:^(nm-connection-editor)$"
-      ];
+      # Fensterregeln (z. B. Floating für pavucontrol) kommen später dazu.
+      # Die Syntax hat sich in neueren Hyprland-Versionen geändert:
+      # https://wiki.hypr.land/Configuring/Window-Rules/
     };
   };
 }
