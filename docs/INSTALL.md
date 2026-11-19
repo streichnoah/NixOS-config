@@ -3,8 +3,10 @@
 Geschätzte Dauer: 1–2 Stunden (+ 20 min für Secure Boot). Lies die Anleitung einmal komplett, bevor du loslegst.
 
 **Überblick:** Windows vorbereiten (A) → NixOS mit **vorübergehend ausgeschaltetem** Secure Boot
-installieren (B, C) → Secure Boot mit eigenen Schlüsseln für NixOS **wieder einschalten** (D).
-Riot-Spiele (Vanguard) laufen erst wieder, wenn Teil D erledigt ist.
+installieren (B, C) → Secure Boot mit eigenen Schlüsseln für NixOS **wieder einschalten** und
+die SSD per TPM automatisch entsperren lassen (D).
+Riot-Spiele (Vanguard) laufen erst wieder, wenn Teil D erledigt ist. Bis D6 fragt NixOS beim
+Booten nach dem LUKS-Passwort, danach nicht mehr.
 
 ---
 
@@ -108,9 +110,10 @@ cryptsetup luksFormat --label NIXCRYPT $ROOT    # YES groß schreiben, dann Pass
 cryptsetup open $ROOT cryptroot
 mkfs.ext4 -L nixos /dev/mapper/cryptroot
 ```
-> Das LUKS-Passwort fragt NixOS bei jedem Start ab. Die Tastatur ist dort **deutsch** eingestellt,
-> aber im Live-System evtl. noch US. Nimm sicherheitshalber ein Passwort ohne `y/z` und Sonderzeichen
-> oder prüfe das Layout vorher mit `loadkeys de`.
+> Das LUKS-Passwort ist dein **Notfall-Schlüssel**. Nach Schritt D6 entsperrt der TPM-Chip die SSD
+> automatisch, bis dahin (und wenn z. B. Secure Boot aus ist) fragt NixOS beim Booten danach.
+> Im Passwort-Manager speichern! Die Tastatur beim Booten ist **deutsch** eingestellt. Prüfe,
+> dass das Live-System beim Eintippen auch deutsch ist, sonst passt das Passwort später nicht.
 
 ### B5. Mounten
 ```bash
@@ -163,7 +166,7 @@ USB-Stick abziehen. Falls direkt Windows startet: im BIOS die Boot-Reihenfolge �
 
 ## Teil C: Erster Start
 
-1. systemd-boot-Menü → **NixOS** → LUKS-Passwort → Login in **tuigreet** als `noah` → Hyprland startet.
+1. systemd-boot-Menü → **NixOS** → LUKS-Passwort (nur bis D6) → Login in **tuigreet** als `noah` → Hyprland startet.
 2. `SUPER + Enter` öffnet ein Terminal.
 
 ### C1. Repo übernehmen
@@ -259,6 +262,23 @@ bootctl status | grep -i "secure boot"    # -> enabled (user)
 > Spinnt Windows nach dem Registrieren: im BIOS *Restore Factory Keys* wählen. Dann bootet Windows
 > wieder normal, NixOS aber erst nach erneutem Setup Mode + D4 (oder mit Secure Boot aus).
 
+### D6. SSD automatisch per TPM entsperren
+Erst jetzt, mit **aktivem Secure Boot**, weil der TPM-Schlüssel an den Secure-Boot-Zustand
+(PCR 7) gebunden wird. Davor eingerichtet, würde er nach Teil D sowieso nicht mehr passen.
+```bash
+systemd-analyze has-tpm2      # sollte "yes" melden (fTPM im BIOS an, wie für Windows 11)
+sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 /dev/nvme0n1p6
+```
+Einmal das LUKS-Passwort eingeben, das war's. Beim nächsten Start: **kein** Passwort mehr, direkt
+der Login-Bildschirm. Prüfen:
+```bash
+sudo systemd-cryptenroll /dev/nvme0n1p6   # listet "password" und "tpm2"
+```
+
+> **Fragt NixOS doch wieder nach dem LUKS-Passwort** (z. B. nach BIOS-Update oder neuen
+> Secure-Boot-Schlüsseln): Passwort eingeben und TPM neu binden:
+> `sudo systemd-cryptenroll --wipe-slot=tpm2 --tpm2-device=auto --tpm2-pcrs=7 /dev/nvme0n1p6`
+
 ---
 
 ## Troubleshooting
@@ -268,6 +288,7 @@ bootctl status | grep -i "secure boot"    # -> enabled (user)
 | Nach Änderung bootet nichts mehr | Im systemd-boot-Menü eine ältere Generation wählen (Menü erscheint 3 s; sonst beim Booten `Leertaste` halten) |
 | Windows will BitLocker-Recovery-Key | Key aus A2 eingeben; tritt einmalig nach Secure-Boot-Änderung auf |
 | Riot: VAN 9003 | Secure Boot ist aus → Teil D erledigen; `msinfo32` prüfen |
+| Boot fragt plötzlich nach LUKS-Passwort | TPM-Bindung passt nicht mehr (BIOS-Update, Secure Boot geändert): Passwort eingeben, D6 mit `--wipe-slot=tpm2` wiederholen |
 | NixOS: „Security violation“ beim Boot | Signatur passt nicht: Secure Boot im BIOS kurz aus, booten, `sudo sbctl verify`, `rebuild` |
 | Uhrzeit in Windows falsch | Ist mit `time.hardwareClockInLocalTime` abgedeckt; sonst `timedatectl` prüfen |
 | `rebuild` findet neue Datei nicht | `git add <datei>`, weil Flakes nur getrackte Dateien sehen |

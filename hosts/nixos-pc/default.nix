@@ -6,6 +6,7 @@
 
     ../../modules/nixos/boot.nix
     ../../modules/nixos/secure-boot.nix
+    ../../modules/nixos/disk-encryption.nix
     ../../modules/nixos/nix.nix
     ../../modules/nixos/locale.nix
     ../../modules/nixos/networking.nix

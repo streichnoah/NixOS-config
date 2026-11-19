@@ -8,7 +8,7 @@ Ziel ist, Linux und Infrastructure-as-Code zu lernen, zu entwickeln und meinen S
 | Config-Stil | Flakes + Home Manager (nixos-unstable) |
 | Hardware | AMD Radeon RX 7800 XT (amdgpu/Mesa), Kernel `linuxPackages_latest` |
 | Boot | systemd-boot + Lanzaboote (Secure Boot an, für Riot Vanguard), eigene 1-GB-ESP; Windows über Mainboard-Bootmenü |
-| Disk | LUKS-verschlüsselt, ext4, zram-Swap |
+| Disk | LUKS-verschlüsselt mit TPM2-Auto-Unlock (kein Boot-Passwort), ext4, zram-Swap |
 | Desktop | Hyprland (Wayland), greetd/tuigreet, Waybar, Fuzzel, Mako, Hyprlock |
 | Shell | zsh + oh-my-zsh, Kitty |
 | Dev | VS Code, Python, Node/TS, Java, .NET, direnv + nix-direnv |
@@ -65,7 +65,6 @@ Oder `sudo nixos-rebuild switch --rollback`.
 ## Ideen für später (IaC-Lernpfad)
 
 - **sops-nix / agenix**: Secrets verschlüsselt im Repo
-- **TPM-Unlock**: LUKS per TPM2 entsperren (`systemd-cryptenroll`), passt zu Secure Boot
 - **disko**: Partitionierung ebenfalls deklarativ
 - **Server mit NixOS**: zweiter Host in `flake.nix`, Deployment per `nixos-rebuild --target-host` oder `deploy-rs`/`colmena`
 - **Terraform + Ansible** gegen den Server aus diesem Repo heraus
