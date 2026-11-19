@@ -9,6 +9,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Secure Boot für NixOS (nötig, damit Windows mit aktivem Secure Boot läuft -> Riot Vanguard)
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v1.2.0";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Zen Browser ist (noch) nicht in nixpkgs -> Community-Flake
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
@@ -16,7 +22,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, lanzaboote, ... }@inputs:
     let
       system = "x86_64-linux";
       username = "noah";
@@ -27,6 +33,7 @@
         specialArgs = { inherit inputs username; };
         modules = [
           ./hosts/nixos-pc
+          lanzaboote.nixosModules.lanzaboote
 
           home-manager.nixosModules.home-manager
           {

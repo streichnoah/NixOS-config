@@ -1,6 +1,10 @@
 # Installation: NixOS neben Windows (gleiche 2-TB-SSD)
 
-Geschätzte Dauer: 1–2 Stunden. Lies die Anleitung einmal komplett, bevor du loslegst.
+Geschätzte Dauer: 1–2 Stunden (+ 20 min für Secure Boot). Lies die Anleitung einmal komplett, bevor du loslegst.
+
+**Überblick:** Windows vorbereiten (A) → NixOS mit **vorübergehend ausgeschaltetem** Secure Boot
+installieren (B, C) → Secure Boot mit eigenen Schlüsseln für NixOS **wieder einschalten** (D).
+Riot-Spiele (Vanguard) laufen erst wieder, wenn Teil D erledigt ist.
 
 ---
 
@@ -17,13 +21,18 @@ manage-bde -status C:
 - Steht dort **Protection On / Schutz aktiviert**: Recovery-Key sichern unter
   https://aka.ms/myrecoverykey (Microsoft-Konto) **oder** mit
   `manage-bde -protectors -get C:` abschreiben/fotografieren.
-  Windows fragt sehr wahrscheinlich nach diesem Key, sobald du Secure Boot ausschaltest.
+  Windows fragt sehr wahrscheinlich nach diesem Key, sobald du Secure Boot ausschaltest bzw. in
+  Teil D neue Schlüssel registrierst.
 - Optional, aber am stressfreisten: `manage-bde -off C:` (entschlüsselt, dauert eine Weile).
 
 ### A3. Secure-Boot-Status nachsehen
 `Win + R` → `msinfo32` → **Sicherer Startzustand / Secure Boot State**.
-Das NixOS-Installationsmedium ist nicht signiert, also muss Secure Boot später im BIOS **aus** sein.
-Windows 11 läuft auch ohne. (Später kann man Secure Boot mit *Lanzaboote* wieder aktivieren.)
+Das NixOS-Installationsmedium ist nicht signiert, also muss Secure Boot **während der Installation**
+aus sein. In Teil D schalten wir es mit *Lanzaboote* dauerhaft wieder ein (für Riot Vanguard nötig).
+
+Schau dir bei der Gelegenheit im BIOS an, wo die Secure-Boot-Optionen liegen (meist unter
+*Boot → Secure Boot* oder *Security*), und ob es **Key Management / Setup Mode / Clear Secure Boot Keys**
+gibt. Die brauchst du in Teil D.
 
 ### A4. Schnellstart deaktivieren
 Sonst bleibt die Windows-Partition „halb gemountet“ und der Bootloader kann zicken.
@@ -144,17 +153,21 @@ nixos-enter --root /mnt -c 'passwd noah'
 reboot
 ```
 USB-Stick abziehen. Falls direkt Windows startet: im BIOS die Boot-Reihenfolge ändern, sodass
-**NixOS / GRUB** (bzw. *UEFI OS* auf der SSD) an erster Stelle steht.
+**Linux Boot Manager** (systemd-boot) an erster Stelle steht und **Windows Boot Manager** dahinter.
+
+> **Windows starten:** beim Einschalten die Boot-Menü-Taste des Mainboards drücken
+> (meist `F8` bei ASUS, `F11` bei MSI/ASRock, `F12` bei Gigabyte) → **Windows Boot Manager**.
+> NixOS ist der Standard, wenn du nichts drückst.
 
 ---
 
 ## Teil C: Erster Start
 
-1. GRUB-Menü → **NixOS** → LUKS-Passwort → Login in **tuigreet** als `noah` → Hyprland startet.
+1. systemd-boot-Menü → **NixOS** → LUKS-Passwort → Login in **tuigreet** als `noah` → Hyprland startet.
 2. `SUPER + Enter` öffnet ein Terminal.
 
-### C1. Windows im GRUB-Menü?
-Fehlt Windows beim ersten Mal, einfach einmal neu bauen. os-prober findet es dann im laufenden System:
+### C1. Repo übernehmen
+Das Repo wurde als root geklont, also gehört es dir noch nicht:
 ```bash
 sudo chown -R noah:users ~/NixOS-config
 cd ~/NixOS-config
@@ -189,12 +202,73 @@ Name, Auflösung und Hz in `home/noah/hyprland.nix` bei `monitor` eintragen, z. 
 
 ---
 
+## Teil D: Secure Boot mit Lanzaboote einschalten
+
+Danach bootet NixOS signiert mit **deinen** Schlüsseln, Windows weiter mit den Microsoft-Schlüsseln,
+und Secure Boot bleibt dauerhaft an.
+
+### D1. Schlüssel erzeugen
+```bash
+sudo sbctl create-keys
+sudo sbctl status        # "Setup Mode: Disabled", "Secure Boot: Disabled" ist hier normal
+```
+Die Schlüssel liegen in `/var/lib/sbctl` und gehören **nicht** ins Repo. Sichere sie am besten
+zusätzlich verschlüsselt (z. B. auf einem USB-Stick).
+
+### D2. Lanzaboote aktivieren
+In `hosts/nixos-pc/default.nix`:
+```nix
+my.secureBoot.enable = true;
+```
+Dann:
+```bash
+rebuild
+sudo sbctl verify
+```
+Alles unter `/boot/EFI/` sollte als **signed** erscheinen. Ausnahme: Dateien mit `kernel-`
+bzw. `-bzImage.efi` im Namen. Die werden indirekt geprüft, `not signed` ist dort normal.
+
+Einmal neu starten und prüfen, dass NixOS noch normal bootet (Secure Boot ist noch aus).
+Committen: `git commit -am "nixos-pc: enable lanzaboote"`.
+
+### D3. BIOS: Setup Mode
+Neustart ins BIOS (`systemctl reboot --firmware-setup` geht direkt dorthin):
+1. **Secure Boot** auf *Enabled* bzw. Modus *Custom* stellen
+2. **Setup Mode** aktivieren. Je nach Hersteller heißt das *Reset to Setup Mode*,
+   *Clear Secure Boot Keys* oder *Delete Platform Key (PK)*.
+   ASUS: *OS Type* = *Windows UEFI Mode*, dann *Key Management → Clear Secure Boot Keys*.
+3. **Nicht** „Erase all Secure Boot Settings“ wählen, falls das auch die *dbx* (Sperrliste) löscht.
+4. Speichern (`F10`) → bootet NixOS.
+
+### D4. Schlüssel registrieren
+```bash
+sudo sbctl status                     # muss "Setup Mode: ✓ Enabled" zeigen
+sudo sbctl enroll-keys --microsoft    # --microsoft ist PFLICHT (Windows + Grafikkarten-ROM)
+```
+Neustart. Danach:
+```bash
+bootctl status | grep -i "secure boot"    # -> enabled (user)
+```
+
+### D5. Windows prüfen
+Über das Boot-Menü (`F8`/`F11`/`F12`) **Windows Boot Manager** starten.
+- Fragt BitLocker nach dem Recovery-Key: Key aus A2 eingeben. Das passiert nur einmal.
+- `msinfo32` → *Sicherer Startzustand: Ein*
+- Riot Client starten. Vanguard sollte jetzt ohne VAN-9003-Fehler laufen.
+
+> Spinnt Windows nach dem Registrieren: im BIOS *Restore Factory Keys* wählen. Dann bootet Windows
+> wieder normal, NixOS aber erst nach erneutem Setup Mode + D4 (oder mit Secure Boot aus).
+
+---
+
 ## Troubleshooting
 
 | Problem | Lösung |
 |---|---|
-| Nach Änderung bootet nichts mehr | Im GRUB *All configurations* → ältere Generation wählen |
+| Nach Änderung bootet nichts mehr | Im systemd-boot-Menü eine ältere Generation wählen (Menü erscheint 3 s; sonst beim Booten `Leertaste` halten) |
 | Windows will BitLocker-Recovery-Key | Key aus A2 eingeben; tritt einmalig nach Secure-Boot-Änderung auf |
+| Riot: VAN 9003 | Secure Boot ist aus → Teil D erledigen; `msinfo32` prüfen |
+| NixOS: „Security violation“ beim Boot | Signatur passt nicht: Secure Boot im BIOS kurz aus, booten, `sudo sbctl verify`, `rebuild` |
 | Uhrzeit in Windows falsch | Ist mit `time.hardwareClockInLocalTime` abgedeckt; sonst `timedatectl` prüfen |
 | `rebuild` findet neue Datei nicht | `git add <datei>`, weil Flakes nur getrackte Dateien sehen |
 | Schwarzer Bildschirm nach Login | `STRG+ALT+F2` → TTY → `journalctl --user -b -u hyprland*` bzw. `~/.local/share/hyprland/hyprland.log` |

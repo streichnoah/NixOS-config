@@ -7,7 +7,7 @@ Ziel ist, Linux und Infrastructure-as-Code zu lernen, zu entwickeln und meinen S
 |---|---|
 | Config-Stil | Flakes + Home Manager (nixos-unstable) |
 | Hardware | AMD Radeon RX 7800 XT (amdgpu/Mesa), Kernel `linuxPackages_latest` |
-| Boot | GRUB (UEFI) + os-prober -> Windows im Menü, eigene 1-GB-ESP |
+| Boot | systemd-boot + Lanzaboote (Secure Boot an, für Riot Vanguard), eigene 1-GB-ESP; Windows über Mainboard-Bootmenü |
 | Disk | LUKS-verschlüsselt, ext4, zram-Swap |
 | Desktop | Hyprland (Wayland), greetd/tuigreet, Waybar, Fuzzel, Mako, Hyprlock |
 | Shell | zsh + oh-my-zsh, Kitty |
@@ -22,7 +22,7 @@ flake.nix                    # Einstiegspunkt: Inputs (nixpkgs, home-manager, ze
 hosts/nixos-pc/
   default.nix                # Welche Module dieser Rechner nutzt, Hostname, stateVersion
   hardware-configuration.nix # Bei der Installation generiert (Disks, Kernelmodule)
-modules/nixos/               # Systemebene (root): Boot, GPU, Audio, Hyprland, Docker, User ...
+modules/nixos/               # Systemebene (root): Boot/Secure Boot, GPU, Audio, Hyprland, Docker, User ...
 home/noah/                   # Home Manager (User): Hyprland-Config, Shell, Git, SSH, VS Code, Tools
 docs/
   INSTALL.md                 # Schritt-für-Schritt Dual-Boot-Installation
@@ -40,7 +40,7 @@ git commit -am "add xyz" && git push
 update && rebuild   # alle Pakete aktualisieren (flake.lock), dann bauen
 ```
 
-Geht etwas kaputt: Im GRUB-Menü unter *NixOS - All configurations* eine ältere Generation booten.
+Geht etwas kaputt: Im systemd-boot-Menü eine ältere Generation booten.
 Oder `sudo nixos-rebuild switch --rollback`.
 
 > Neue Dateien müssen vor dem `rebuild` mit `git add` getrackt werden, sonst sieht die Flake sie nicht.
@@ -65,7 +65,7 @@ Oder `sudo nixos-rebuild switch --rollback`.
 ## Ideen für später (IaC-Lernpfad)
 
 - **sops-nix / agenix**: Secrets verschlüsselt im Repo
-- **Lanzaboote**: Secure Boot wieder aktivieren
+- **TPM-Unlock**: LUKS per TPM2 entsperren (`systemd-cryptenroll`), passt zu Secure Boot
 - **disko**: Partitionierung ebenfalls deklarativ
 - **Server mit NixOS**: zweiter Host in `flake.nix`, Deployment per `nixos-rebuild --target-host` oder `deploy-rs`/`colmena`
 - **Terraform + Ansible** gegen den Server aus diesem Repo heraus

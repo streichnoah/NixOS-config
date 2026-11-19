@@ -1,6 +1,11 @@
-# Bootloader: GRUB (UEFI) mit os-prober, damit Windows automatisch im Menü landet.
-# NixOS bekommt eine EIGENE EFI-Partition (/boot, 1 GB), weil die Windows-ESP
-# meist nur 100 MB groß ist - zu klein für mehrere NixOS-Generationen.
+# Bootloader: systemd-boot auf einer EIGENEN EFI-Partition (/boot, 1 GB).
+# Die Windows-ESP ist meist nur 100 MB groß, zu klein für mehrere NixOS-Generationen.
+#
+# Windows startest du über das Boot-Menü des Mainboards (F8/F11/F12 beim Einschalten).
+# systemd-boot erkennt Windows nur auf der eigenen ESP, und ein Chainload über die
+# EFI-Shell würde mit Secure Boot nicht funktionieren.
+#
+# Mit my.secureBoot.enable = true übernimmt Lanzaboote (siehe secure-boot.nix).
 { pkgs, ... }:
 {
   boot.loader = {
@@ -8,15 +13,13 @@
       canTouchEfiVariables = true;
       efiSysMountPoint = "/boot";
     };
-    grub = {
+    systemd-boot = {
       enable = true;
-      efiSupport = true;
-      device = "nodev";
-      useOSProber = true; # findet Windows Boot Manager auf der anderen ESP
-      configurationLimit = 15; # alte Generationen im Menü begrenzen
-      default = "saved"; # merkt sich den zuletzt gebooteten Eintrag
+      configurationLimit = 15; # alte Generationen im Menü und auf der ESP begrenzen
+      editor = false; # keine Kernel-Parameter-Änderung im Bootmenü (wäre eine Sicherheitslücke)
     };
-    timeout = 5;
+    # Menü 3 s anzeigen, darin sind ältere Generationen zum Zurückrollen
+    timeout = 3;
   };
 
   # Aktueller Kernel - gut für neue AMD-Hardware (RDNA3)
