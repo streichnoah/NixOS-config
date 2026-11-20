@@ -44,7 +44,6 @@
     jq
     yq-go
     tree
-    btop
     httpie
   ];
 }

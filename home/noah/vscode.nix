@@ -2,10 +2,17 @@
 # Weitere Extensions kannst du zusätzlich ganz normal in VS Code installieren.
 { pkgs, ... }:
 {
+  # Offizielles Catppuccin-Theme statt der automatisch erzeugten Stylix-Variante
+  stylix.targets.vscode.enable = false;
+
   programs.vscode = {
     enable = true;
     profiles.default = {
       extensions = with pkgs.vscode-extensions; [
+        # Aussehen
+        catppuccin.catppuccin-vsc
+        catppuccin.catppuccin-vsc-icons
+
         # Nix
         jnoortheen.nix-ide
         mkhl.direnv
@@ -34,6 +41,11 @@
       ];
 
       userSettings = {
+        "workbench.colorTheme" = "Catppuccin Mocha";
+        "workbench.iconTheme" = "catppuccin-mocha";
+        "editor.fontFamily" = "'JetBrainsMono Nerd Font', monospace";
+        "editor.fontSize" = 14;
+        "terminal.integrated.fontFamily" = "JetBrainsMono Nerd Font";
         "editor.fontLigatures" = true;
         "editor.formatOnSave" = true;
         "terminal.integrated.defaultProfile.linux" = "zsh";
