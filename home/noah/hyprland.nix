@@ -210,9 +210,50 @@ in
       hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })
       hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true })
 
-      -- Fensterregeln (z. B. Floating für pavucontrol) kommen später dazu:
-      -- hl.window_rule({ match = { class = "pavucontrol" }, float = true })
+      ---- Fensterregeln ----
+      -- match-Werte sind reguläre Ausdrücke. Klasse/Titel eines Fensters: `hyprctl clients`
       -- https://wiki.hypr.land/Configuring/Basics/Window-Rules/
+
+      -- Kleine Einstellungs-Tools schweben mittig statt gekachelt zu werden
+      hl.window_rule({
+        name  = "float-tools",
+        match = { class = "^(org\\.pulseaudio\\.pavucontrol|blueman-manager|nm-connection-editor)$" },
+        float = true, center = true, size = "900 600",
+      })
+
+      -- Passwortabfrage (Polkit) schwebend und zentriert
+      hl.window_rule({
+        name  = "float-polkit",
+        match = { class = "^(hyprpolkitagent)$" },
+        float = true, center = true,
+      })
+
+      -- Öffnen-/Speichern-Dialoge (GTK-Portal und Dialoge innerhalb von Apps)
+      hl.window_rule({
+        name  = "float-file-dialog-portal",
+        match = { class = "^(xdg-desktop-portal-gtk)$" },
+        float = true, center = true, size = "1000 650",
+      })
+      hl.window_rule({
+        name  = "float-file-dialog-title",
+        match = { title = "^(Open File|Open Files|Save File|Save As|Datei öffnen|Dateien öffnen|Datei speichern|Speichern unter).*$" },
+        float = true, center = true,
+      })
+
+      -- Bild-in-Bild (Zen/Firefox): klein, unten rechts, auf allen Workspaces sichtbar
+      hl.window_rule({
+        name  = "pip",
+        match = { title = "^(Picture-in-Picture|Bild-im-Bild)$" },
+        float = true, pin = true, keep_aspect_ratio = true,
+        size = "480 270", move = "monitor_w-500 monitor_h-290",
+      })
+
+      -- Apps dürfen sich nicht selbst maximieren (sonst zerschießt das das Kachel-Layout)
+      hl.window_rule({
+        name  = "suppress-maximize",
+        match = { class = ".*" },
+        suppress_event = "maximize",
+      })
     '';
   };
 }
