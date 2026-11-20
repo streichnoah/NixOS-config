@@ -23,15 +23,44 @@ in
     configType = "lua";
 
     settings = {
-      # Monitor automatisch mit höchster Bildwiederholrate erkennen.
-      # Später konkret, z. B. { output = "DP-1"; mode = "2560x1440@165"; position = "0x0"; }
-      # (Namen via `hyprctl monitors`)
-      monitor = {
-        output = "";
-        mode = "highrr";
-        position = "auto";
-        scale = 1;
-      };
+      # Monitore (Namen, Modi: `hyprctl monitors`). Fest eingetragen, damit die Anordnung
+      # immer gleich bleibt. Der letzte Eintrag (output = "") gilt für jeden anderen
+      # Monitor, z. B. einen Beamer.
+      monitor = [
+        {
+          output = "DP-1"; # links
+          mode = "1920x1080@239.96";
+          position = "0x0";
+          scale = 1;
+        }
+        {
+          output = "DP-2"; # rechts, Hauptmonitor
+          mode = "1920x1080@239.96";
+          position = "1920x0";
+          scale = 1;
+        }
+        {
+          output = "";
+          mode = "preferred";
+          position = "auto";
+          scale = 1;
+        }
+      ];
+
+      # Start: Workspace 1 auf dem Hauptmonitor (rechts), 2 links. Alle anderen
+      # Workspaces öffnen dort, wo gerade der Fokus ist.
+      workspace_rule = [
+        {
+          workspace = "1";
+          monitor = "DP-2";
+          default = true;
+        }
+        {
+          workspace = "2";
+          monitor = "DP-1";
+          default = true;
+        }
+      ];
 
       # Alle normalen Optionen -> hl.config({ ... })
       config = {
@@ -80,11 +109,19 @@ in
 
         dwindle.preserve_split = true;
 
-        # Unsichtbarer Mauszeiger auf manchen GPU/Monitor-Kombis -> Software-Cursor nutzen
-        cursor.no_hardware_cursors = true;
+        cursor = {
+          # Unsichtbarer Mauszeiger auf manchen GPU/Monitor-Kombis -> Software-Cursor nutzen
+          no_hardware_cursors = true;
+          # Mauszeiger startet auf dem Hauptmonitor
+          default_monitor = "DP-2";
+        };
 
         # Logo/Anime-Wallpaper aus; das Wallpaper zeigt hyprpaper (von Stylix eingerichtet)
-        misc.force_default_wallpaper = 0;
+        misc = {
+          force_default_wallpaper = 0;
+          # FreeSync/VRR: 2 = nur für Vollbild-Apps (Spiele), auf dem Desktop aus
+          vrr = 2;
+        };
       };
     };
 

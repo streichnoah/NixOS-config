@@ -93,6 +93,7 @@
     settings.main = {
       layer = "top";
       position = "top";
+      output = [ "DP-2" ]; # nur auf dem Hauptmonitor
       height = 30;
       # Abstand zum Bildschirmrand -> Leiste "schwebt" passend zu den Fenster-Gaps
       margin-top = 8;
