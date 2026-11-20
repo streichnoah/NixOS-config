@@ -4,5 +4,6 @@
     inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.discord
     pkgs.spotify
+    pkgs.obsidian # Markdown-Notizen
   ];
 }
