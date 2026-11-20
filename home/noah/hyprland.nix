@@ -7,7 +7,11 @@
 #   - settings.<name> = { ... }  wird zu  hl.<name>({ ... })
 #   - extraConfig wird als Lua-Code unverändert angehängt (Keybinds, Autostart)
 # Die API-Referenz liegt im Hyprland-Paket unter share/hypr/stubs/hl.meta.lua.
-{ ... }:
+{ config, lib, ... }:
+let
+  # Farben aus dem Stylix-Schema (modules/nixos/theme.nix), z. B. base0D = Blau, base0E = Lila
+  c = config.lib.stylix.colors;
+in
 {
   wayland.windowManager.hyprland = {
     enable = true;
@@ -39,28 +43,36 @@
         };
 
         general = {
-          gaps_in = 4;
-          gaps_out = 8;
-          border_size = 2;
-          col = {
-            active_border = {
-              colors = [
-                "rgba(89b4faee)"
-                "rgba(cba6f7ee)"
-              ];
-              angle = 45;
-            };
-            inactive_border = "rgba(45475aaa)";
+          gaps_in = 6;
+          gaps_out = 14;
+          border_size = 3;
+          # Stylix setzt einfarbige Rahmen; wir überschreiben mit einem Verlauf Blau -> Lila.
+          # mkForce = "dieser Wert gewinnt", auch gegen die Definition aus Stylix.
+          "col.active_border" = lib.mkForce {
+            colors = [
+              "rgba(${c.base0D}ee)"
+              "rgba(${c.base0E}ee)"
+            ];
+            angle = 45;
           };
           layout = "dwindle";
         };
 
         decoration = {
-          rounding = 8;
+          rounding = 14;
+          rounding_power = 2;
+          active_opacity = 1.0;
+          inactive_opacity = 0.92;
           blur = {
             enabled = true;
-            size = 6;
-            passes = 2;
+            size = 8;
+            passes = 3;
+            vibrancy = 0.17;
+          };
+          shadow = {
+            enabled = true;
+            range = 20;
+            render_power = 3;
           };
         };
 
@@ -71,10 +83,8 @@
         # Unsichtbarer Mauszeiger auf manchen GPU/Monitor-Kombis -> Software-Cursor nutzen
         cursor.no_hardware_cursors = true;
 
-        misc = {
-          disable_hyprland_logo = true;
-          force_default_wallpaper = 0;
-        };
+        # Logo/Anime-Wallpaper aus; das Wallpaper zeigt hyprpaper (von Stylix eingerichtet)
+        misc.force_default_wallpaper = 0;
       };
     };
 
@@ -85,6 +95,22 @@
       local launcher = "fuzzel"
       local files    = "thunar"
       local browser  = "zen-beta" -- so heißt der Befehl im zen-browser-Flake
+
+      ---- Animationen ("verspielt": federnd, mit Popin) ----
+      hl.curve("easeOutQuint", { type = "bezier", points = { {0.23, 1}, {0.32, 1} } })
+      hl.curve("almostLinear", { type = "bezier", points = { {0.5, 0.5}, {0.75, 1} } })
+      hl.curve("overshot",     { type = "bezier", points = { {0.05, 0.9}, {0.1, 1.1} } })
+      hl.curve("bouncy",       { type = "spring", mass = 1, stiffness = 180, damping = 14 })
+
+      hl.animation({ leaf = "global",     enabled = true, speed = 10,  bezier = "default" })
+      hl.animation({ leaf = "border",     enabled = true, speed = 5,   bezier = "easeOutQuint" })
+      hl.animation({ leaf = "borderangle", enabled = true, speed = 60, bezier = "almostLinear", style = "loop" })
+      hl.animation({ leaf = "windows",    enabled = true, speed = 5,   spring = "bouncy" })
+      hl.animation({ leaf = "windowsIn",  enabled = true, speed = 4,   spring = "bouncy", style = "popin 70%" })
+      hl.animation({ leaf = "windowsOut", enabled = true, speed = 2,   bezier = "easeOutQuint", style = "popin 70%" })
+      hl.animation({ leaf = "fade",       enabled = true, speed = 3,   bezier = "almostLinear" })
+      hl.animation({ leaf = "layers",     enabled = true, speed = 4,   bezier = "overshot", style = "slide" })
+      hl.animation({ leaf = "workspaces", enabled = true, speed = 4,   bezier = "overshot", style = "slidevert" })
 
       ---- Autostart ----
       hl.on("hyprland.start", function()

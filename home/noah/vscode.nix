@@ -34,7 +34,6 @@
       ];
 
       userSettings = {
-        "editor.fontFamily" = "'JetBrainsMono Nerd Font', monospace";
         "editor.fontLigatures" = true;
         "editor.formatOnSave" = true;
         "terminal.integrated.defaultProfile.linux" = "zsh";

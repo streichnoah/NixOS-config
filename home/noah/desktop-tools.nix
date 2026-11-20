@@ -14,7 +14,6 @@
   programs.fuzzel = {
     enable = true;
     settings.main = {
-      font = "JetBrainsMono Nerd Font:size=12";
       terminal = "kitty";
       layer = "overlay";
     };
@@ -25,8 +24,8 @@
     enable = true;
     settings = {
       default-timeout = 5000;
-      border-radius = 8;
-      font = "JetBrainsMono Nerd Font 11";
+      border-radius = 12;
+      border-size = 2;
     };
   };
 
@@ -41,30 +40,26 @@
     enable = true;
     settings = {
       general.hide_cursor = true;
-      background = [
-        {
-          color = "rgba(1e1e2eff)";
-          blur_passes = 2;
-        }
-      ];
-      input-field = [
-        {
-          size = "300, 50";
-          position = "0, -80";
-          halign = "center";
-          valign = "center";
-          placeholder_text = "Passwort...";
-        }
-      ];
-      label = [
-        {
-          text = "$TIME";
-          font_size = 64;
-          position = "0, 80";
-          halign = "center";
-          valign = "center";
-        }
-      ];
+      # Farben und Hintergrundbild kommen von Stylix
+      background = {
+        blur_passes = 3;
+        blur_size = 6;
+      };
+      input-field = {
+        size = "300, 50";
+        position = "0, -80";
+        halign = "center";
+        valign = "center";
+        rounding = 14;
+        placeholder_text = "Passwort...";
+      };
+      label = {
+        text = "$TIME";
+        font_size = 64;
+        position = "0, 80";
+        halign = "center";
+        valign = "center";
+      };
     };
   };
 
@@ -99,6 +94,10 @@
       layer = "top";
       position = "top";
       height = 30;
+      # Abstand zum Bildschirmrand -> Leiste "schwebt" passend zu den Fenster-Gaps
+      margin-top = 8;
+      margin-left = 14;
+      margin-right = 14;
       modules-left = [ "hyprland/workspaces" ];
       modules-center = [ "clock" ];
       modules-right = [
@@ -117,7 +116,11 @@
       pulseaudio = {
         format = "{icon} {volume}%";
         format-muted = "󰝟 muted";
-        format-icons.default = [ "" "" "" ];
+        format-icons.default = [
+          ""
+          ""
+          ""
+        ];
         on-click = "pavucontrol";
       };
       network = {
@@ -128,21 +131,17 @@
       tray.spacing = 8;
     };
     style = ''
-      * {
-        font-family: "JetBrainsMono Nerd Font";
-        font-size: 13px;
-      }
+      /* Farben (@base00..@base0F) und Schrift setzt Stylix, hier nur Layout */
       window#waybar {
-        background: rgba(30, 30, 46, 0.85);
-        color: #cdd6f4;
+        border-radius: 14px;
       }
       #workspaces button {
         padding: 0 8px;
-        color: #a6adc8;
+        border-radius: 10px;
       }
       #workspaces button.active {
-        color: #89b4fa;
-        border-bottom: 2px solid #89b4fa;
+        color: @base0D;
+        border-bottom: 3px solid @base0D;
       }
       #clock, #cpu, #memory, #pulseaudio, #network, #tray {
         padding: 0 10px;
@@ -150,26 +149,7 @@
     '';
   };
 
-  # Einheitliches Dark-Theme für GTK-Apps
-  gtk = {
-    enable = true;
-    theme = {
-      name = "Adwaita-dark";
-      package = pkgs.gnome-themes-extra;
-    };
-    iconTheme = {
-      name = "Papirus-Dark";
-      package = pkgs.papirus-icon-theme;
-    };
-  };
-  dconf.settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
-
-  home.pointerCursor = {
-    enable = true;
-    name = "Bibata-Modern-Classic";
-    package = pkgs.bibata-cursors;
-    size = 24;
-    gtk.enable = true;
-    hyprcursor.enable = true;
-  };
+  # GTK-Theme, Icons (Papirus) und Cursor setzt Stylix (modules/nixos/theme.nix).
+  # Cursor zusätzlich als hyprcursor, damit Hyprland ihn selbst zeichnet.
+  home.pointerCursor.hyprcursor.enable = true;
 }

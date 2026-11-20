@@ -13,6 +13,7 @@
     ../../modules/nixos/amd-gpu.nix
     ../../modules/nixos/audio.nix
     ../../modules/nixos/hyprland.nix
+    ../../modules/nixos/theme.nix
     ../../modules/nixos/virtualisation.nix
     ../../modules/nixos/users.nix
     ../../modules/nixos/packages.nix

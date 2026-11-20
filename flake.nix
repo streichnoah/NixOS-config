@@ -20,9 +20,23 @@
       url = "github:0xc000022070/zen-browser-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Systemweites Theming: Farbschema, Schriften, Wallpaper für (fast) alle Apps
+    stylix = {
+      url = "github:nix-community/stylix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, home-manager, lanzaboote, ... }@inputs:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      home-manager,
+      lanzaboote,
+      stylix,
+      ...
+    }@inputs:
     let
       system = "x86_64-linux";
       username = "noah";
@@ -34,6 +48,7 @@
         modules = [
           ./hosts/nixos-pc
           lanzaboote.nixosModules.lanzaboote
+          stylix.nixosModules.stylix
 
           home-manager.nixosModules.home-manager
           {
