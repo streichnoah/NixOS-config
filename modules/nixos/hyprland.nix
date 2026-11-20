@@ -29,6 +29,9 @@
   services.udisks2.enable = true;
   services.gvfs.enable = true;
 
+  # Akku-/Energiestatus über D-Bus (z. B. Akkustand von Bluetooth-Kopfhörern in WirePlumber/Waybar)
+  services.upower.enable = true;
+
   # Dateimanager
   programs.thunar.enable = true;
 
