@@ -31,9 +31,9 @@
       update = "nix flake update --flake ~/NixOS-config";
       cleanup = "sudo nix-collect-garbage --delete-older-than 14d";
 
-      ls = "eza --icons";
-      ll = "eza -l --icons --git";
-      la = "eza -la --icons --git";
+      ls = "eza --icons=auto";
+      ll = "eza -l --icons=auto --git";
+      la = "eza -la --icons=auto --git";
       cat = "bat --paging=never";
       k = "kubectl";
       tf = "terraform";

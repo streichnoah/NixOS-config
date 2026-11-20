@@ -62,6 +62,9 @@
         preserve_split = true;
       };
 
+      # Unsichtbarer Mauszeiger auf manchen GPU/Monitor-Kombis -> Software-Cursor nutzen
+      cursor.no_hardware_cursors = true;
+
       misc = {
         disable_hyprland_logo = true;
         force_default_wallpaper = 0;

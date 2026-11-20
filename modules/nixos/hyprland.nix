@@ -7,11 +7,12 @@
     xwayland.enable = true;
   };
 
-  # Login-Screen: schlanker TUI-Greeter, startet danach Hyprland
+  # Login-Screen: schlanker TUI-Greeter, startet danach Hyprland über den
+  # offiziellen Wrapper start-hyprland (direkter Start von `Hyprland` wird nicht empfohlen)
   services.greetd = {
     enable = true;
     settings.default_session = {
-      command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --asterisks --cmd Hyprland";
+      command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --asterisks --cmd start-hyprland";
       user = "greeter";
     };
   };
