@@ -35,6 +35,9 @@
     kubernetes-helm
     k9s
 
+    # KI-Assistent im Terminal (`claude`), Login beim ersten Start über den Browser
+    claude-code
+
     # CLI-Allrounder
     ripgrep
     fd
