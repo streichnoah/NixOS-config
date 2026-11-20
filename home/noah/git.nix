@@ -4,11 +4,8 @@
     enable = true;
     settings = {
       user = {
-        name = "Noah";
-        # TODO: E-Mail eintragen (oder GitHub-noreply-Adresse:
-        #   <id>+streichnoah@users.noreply.github.com, findest du unter
-        #   GitHub -> Settings -> Emails)
-        # email = "...";
+        name = "streichnoah";
+        email = "streich.noah@gmail.com";
       };
       init.defaultBranch = "main";
       pull.rebase = true;
