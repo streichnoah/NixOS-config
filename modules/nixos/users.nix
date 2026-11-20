@@ -8,7 +8,12 @@
     isNormalUser = true;
     description = "Noah";
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" "networkmanager" "video" "audio" ];
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+      "video"
+      "audio"
+    ];
     # Passwort wird bei der Installation per `nixos-install` bzw. `passwd` gesetzt.
   };
 }

@@ -11,7 +11,12 @@
 #   5. sudo sbctl enroll-keys --microsoft  -> eigene + Microsoft-Schlüssel registrieren
 #      (Microsoft-Schlüssel sind Pflicht: Windows-Bootloader und das Option-ROM der
 #      Grafikkarte sind damit signiert. Ohne sie: Windows bootet nicht/schwarzer Bildschirm.)
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.my.secureBoot;
 in
