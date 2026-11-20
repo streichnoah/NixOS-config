@@ -1,5 +1,12 @@
 # Hyprland-Konfiguration. Doku: https://wiki.hypr.land
 # Mod-Taste ist SUPER (Windows-Taste).
+#
+# Ab Hyprland 0.57 gibt es nur noch Lua-Configs (hyprland.lua), das alte
+# hyprland.conf-Format (hyprlang) wird nicht mehr gelesen. Home Manager erzeugt
+# daraus ~/.config/hypr/hyprland.lua:
+#   - settings.<name> = { ... }  wird zu  hl.<name>({ ... })
+#   - extraConfig wird als Lua-Code unverändert angehängt (Keybinds, Autostart)
+# Die API-Referenz liegt im Hyprland-Paket unter share/hypr/stubs/hl.meta.lua.
 { ... }:
 {
   wayland.windowManager.hyprland = {
@@ -9,141 +16,140 @@
     portalPackage = null;
     systemd.enable = true;
 
-    # Klassisches Hyprlang-Format (hyprland.conf). Ab stateVersion 26.05 erzeugt
-    # Home Manager sonst eine Lua-Config (hyprland.lua), zu der die Syntax unten
-    # ($mod, bind = "...") nicht passt. Umstieg auf Lua ist später möglich.
-    configType = "hyprlang";
+    configType = "lua";
 
     settings = {
-      "$mod" = "SUPER";
-      "$terminal" = "kitty";
-      "$launcher" = "fuzzel";
-      "$files" = "thunar";
-      "$browser" = "zen";
-
       # Monitor automatisch mit höchster Bildwiederholrate erkennen.
-      # Später konkret, z. B.: "DP-1, 2560x1440@165, 0x0, 1"  (Namen via `hyprctl monitors`)
-      monitor = [ ", highrr, auto, 1" ];
-
-      exec-once = [
-        "nm-applet --indicator"
-        "blueman-applet"
-      ];
-
-      input = {
-        kb_layout = "de";
-        follow_mouse = 1;
-        sensitivity = 0;
-        accel_profile = "flat";
+      # Später konkret, z. B. { output = "DP-1"; mode = "2560x1440@165"; position = "0x0"; }
+      # (Namen via `hyprctl monitors`)
+      monitor = {
+        output = "";
+        mode = "highrr";
+        position = "auto";
+        scale = 1;
       };
 
-      general = {
-        gaps_in = 4;
-        gaps_out = 8;
-        border_size = 2;
-        "col.active_border" = "rgba(89b4faee) rgba(cba6f7ee) 45deg";
-        "col.inactive_border" = "rgba(45475aaa)";
-        layout = "dwindle";
-      };
+      # Alle normalen Optionen -> hl.config({ ... })
+      config = {
+        input = {
+          kb_layout = "de";
+          follow_mouse = 1;
+          sensitivity = 0;
+          accel_profile = "flat";
+        };
 
-      decoration = {
-        rounding = 8;
-        blur = {
-          enabled = true;
-          size = 6;
-          passes = 2;
+        general = {
+          gaps_in = 4;
+          gaps_out = 8;
+          border_size = 2;
+          col = {
+            active_border = {
+              colors = [
+                "rgba(89b4faee)"
+                "rgba(cba6f7ee)"
+              ];
+              angle = 45;
+            };
+            inactive_border = "rgba(45475aaa)";
+          };
+          layout = "dwindle";
+        };
+
+        decoration = {
+          rounding = 8;
+          blur = {
+            enabled = true;
+            size = 6;
+            passes = 2;
+          };
+        };
+
+        animations.enabled = true;
+
+        dwindle.preserve_split = true;
+
+        # Unsichtbarer Mauszeiger auf manchen GPU/Monitor-Kombis -> Software-Cursor nutzen
+        cursor.no_hardware_cursors = true;
+
+        misc = {
+          disable_hyprland_logo = true;
+          force_default_wallpaper = 0;
         };
       };
-
-      animations.enabled = true;
-
-      dwindle = {
-        pseudotile = true;
-        preserve_split = true;
-      };
-
-      # Unsichtbarer Mauszeiger auf manchen GPU/Monitor-Kombis -> Software-Cursor nutzen
-      cursor.no_hardware_cursors = true;
-
-      misc = {
-        disable_hyprland_logo = true;
-        force_default_wallpaper = 0;
-      };
-
-      bind = [
-        # Programme
-        "$mod, Return, exec, $terminal"
-        "$mod, D, exec, $launcher"
-        "$mod, E, exec, $files"
-        "$mod, B, exec, $browser"
-        "$mod SHIFT, V, exec, cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"
-
-        # Fenster
-        "$mod, Q, killactive"
-        "$mod, F, fullscreen"
-        "$mod, V, togglefloating"
-        "$mod, P, pseudo"
-        "$mod, J, togglesplit"
-
-        # Sitzung
-        "$mod, L, exec, hyprlock"
-        "$mod SHIFT, E, exit"
-
-        # Screenshots (Bereich / ganzer Bildschirm) -> Zwischenablage + ~/Pictures
-        ", Print, exec, hyprshot -m region -o ~/Pictures/Screenshots"
-        "SHIFT, Print, exec, hyprshot -m output -o ~/Pictures/Screenshots"
-
-        # Fokus mit Pfeiltasten
-        "$mod, left, movefocus, l"
-        "$mod, right, movefocus, r"
-        "$mod, up, movefocus, u"
-        "$mod, down, movefocus, d"
-
-        # Fenster verschieben
-        "$mod SHIFT, left, movewindow, l"
-        "$mod SHIFT, right, movewindow, r"
-        "$mod SHIFT, up, movewindow, u"
-        "$mod SHIFT, down, movewindow, d"
-
-        # Scratchpad
-        "$mod, S, togglespecialworkspace, magic"
-        "$mod SHIFT, S, movetoworkspace, special:magic"
-      ]
-      # Workspaces 1-9: SUPER+Zahl wechselt, SUPER+SHIFT+Zahl verschiebt Fenster
-      ++ (builtins.concatLists (
-        builtins.genList (
-          i:
-          let
-            ws = toString (i + 1);
-          in
-          [
-            "$mod, ${ws}, workspace, ${ws}"
-            "$mod SHIFT, ${ws}, movetoworkspace, ${ws}"
-          ]
-        ) 9
-      ));
-
-      # Maus: SUPER + Links ziehen = verschieben, SUPER + Rechts ziehen = Größe ändern
-      bindm = [
-        "$mod, mouse:272, movewindow"
-        "$mod, mouse:273, resizewindow"
-      ];
-
-      # Lautstärke/Medien (funktionieren auch im Lockscreen, mit Wiederholung)
-      bindel = [
-        ", XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
-        ", XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
-      ];
-      bindl = [
-        ", XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
-        ", XF86AudioPlay, exec, playerctl play-pause"
-        ", XF86AudioNext, exec, playerctl next"
-        ", XF86AudioPrev, exec, playerctl previous"
-      ];
-
-      # Fensterregeln (z. B. Floating für pavucontrol) kommen später dazu.
-      # Die Syntax hat sich in neueren Hyprland-Versionen geändert:
-      # https://wiki.hypr.land/Configuring/Window-Rules/
     };
+
+    extraConfig = ''
+      ---- Programme ----
+      local mod      = "SUPER"
+      local terminal = "kitty"
+      local launcher = "fuzzel"
+      local files    = "thunar"
+      local browser  = "zen"
+
+      ---- Autostart ----
+      hl.on("hyprland.start", function()
+        hl.exec_cmd("nm-applet --indicator")
+        hl.exec_cmd("blueman-applet")
+      end)
+
+      ---- Keybinds ----
+      local function bind(keys, dispatcher, opts)
+        hl.bind(mod .. " + " .. keys, dispatcher, opts)
+      end
+
+      -- Programme
+      bind("Return", hl.dsp.exec_cmd(terminal))
+      bind("D", hl.dsp.exec_cmd(launcher))
+      bind("E", hl.dsp.exec_cmd(files))
+      bind("B", hl.dsp.exec_cmd(browser))
+      bind("SHIFT + V", hl.dsp.exec_cmd("cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"))
+
+      -- Fenster
+      bind("Q", hl.dsp.window.close())
+      bind("F", hl.dsp.window.fullscreen())
+      bind("V", hl.dsp.window.float({ action = "toggle" }))
+      bind("P", hl.dsp.window.pseudo())
+      bind("J", hl.dsp.layout("togglesplit"))
+
+      -- Sitzung
+      bind("L", hl.dsp.exec_cmd("hyprlock"))
+      bind("SHIFT + E", hl.dsp.exit())
+
+      -- Screenshots (Bereich / ganzer Bildschirm) -> Zwischenablage + ~/Pictures
+      hl.bind("Print", hl.dsp.exec_cmd("hyprshot -m region -o ~/Pictures/Screenshots"))
+      hl.bind("SHIFT + Print", hl.dsp.exec_cmd("hyprshot -m output -o ~/Pictures/Screenshots"))
+
+      -- Fokus mit Pfeiltasten, mit SHIFT Fenster verschieben
+      for _, dir in ipairs({ "left", "right", "up", "down" }) do
+        bind(dir, hl.dsp.focus({ direction = dir }))
+        bind("SHIFT + " .. dir, hl.dsp.window.move({ direction = dir }))
+      end
+
+      -- Scratchpad
+      bind("S", hl.dsp.workspace.toggle_special("magic"))
+      bind("SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
+
+      -- Workspaces 1-9: SUPER+Zahl wechselt, SUPER+SHIFT+Zahl verschiebt Fenster
+      for i = 1, 9 do
+        bind(tostring(i), hl.dsp.focus({ workspace = i }))
+        bind("SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
+      end
+
+      -- Maus: SUPER + Links ziehen = verschieben, SUPER + Rechts ziehen = Größe ändern
+      bind("mouse:272", hl.dsp.window.drag(), { mouse = true })
+      bind("mouse:273", hl.dsp.window.resize(), { mouse = true })
+
+      -- Lautstärke/Medien (funktionieren auch im Lockscreen)
+      hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
+      hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { locked = true, repeating = true })
+      hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true })
+      hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
+      hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })
+      hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true })
+
+      -- Fensterregeln (z. B. Floating für pavucontrol) kommen später dazu:
+      -- hl.window_rule({ match = { class = "pavucontrol" }, float = true })
+      -- https://wiki.hypr.land/Configuring/Basics/Window-Rules/
+    '';
   };
 }
