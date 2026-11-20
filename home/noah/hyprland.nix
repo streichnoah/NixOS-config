@@ -84,7 +84,7 @@
       local terminal = "kitty"
       local launcher = "fuzzel"
       local files    = "thunar"
-      local browser  = "zen"
+      local browser  = "zen-beta" -- so heißt der Befehl im zen-browser-Flake
 
       ---- Autostart ----
       hl.on("hyprland.start", function()
