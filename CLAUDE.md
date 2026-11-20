@@ -23,9 +23,12 @@ Erkläre Änderungen kurz und verständlich (auf Deutsch), statt nur Befehle hin
 - Rollback: ältere Generation im systemd-boot-Menü oder `sudo nixos-rebuild switch --rollback`.
 
 ## Wichtige Fakten / Stolperfallen
-- **Hyprland 0.57** + Home Manager: `configType = "hyprlang"` ist gesetzt, weil HM ab stateVersion 26.05
-  sonst Lua erzeugt. Window-Rules haben in neueren Hyprland-Versionen eine neue Syntax, also im Wiki prüfen:
-  https://wiki.hypr.land. Hyprland-Logs: `~/.local/share/hyprland/hyprland.log` bzw. `hyprctl`.
+- **Hyprland 0.57** liest **nur noch Lua** (`~/.config/hypr/hyprland.lua`); das alte `hyprland.conf`-Format
+  (hyprlang) wird ignoriert, auch mit `--config`. In `home/noah/hyprland.nix` gilt daher `configType = "lua"`:
+  Optionen in `settings.config` (→ `hl.config({...})`), Keybinds/Autostart als Lua in `extraConfig`.
+  API-Referenz: `share/hypr/stubs/hl.meta.lua` im Hyprland-Paket, Wiki: https://wiki.hypr.land.
+  Vor dem Aktivieren prüfen: `Hyprland --verify-config --config <erzeugte hyprland.lua>`; im laufenden
+  System: `hyprctl configerrors`. Hypridle/Hyprlock nutzen weiterhin `.conf`.
 - **Secure Boot** über Lanzaboote (`modules/nixos/secure-boot.nix`, Schalter `my.secureBoot.enable`).
   Schlüssel liegen in `/var/lib/sbctl` und gehören **niemals** ins Repo. Mainboard: Gigabyte,
   *Factory Key Provision* muss im BIOS auf Disabled bleiben. Windows wird über das Boot-Menü (F12)
@@ -38,8 +41,9 @@ Erkläre Änderungen kurz und verständlich (auf Deutsch), statt nur Befehle hin
   nicht raten.
 
 ## Regeln
-- Das Repo ist **öffentlich**: keine Secrets, privaten Keys, Passwörter, Tokens oder privaten
-  E-Mail-Adressen/IPs committen. Für Secrets später sops-nix/agenix.
+- Das Repo ist **öffentlich**: keine Secrets, privaten Keys, Passwörter, Tokens oder privaten IPs
+  committen. Für Secrets später sops-nix/agenix. Ausnahme: Noahs Git-Identität in `home/noah/git.nix`
+  (Name + E-Mail) steht bewusst im Repo; keine weiteren privaten Adressen hinzufügen.
 - Nichts an Partitionen, Bootloader-Schlüsseln, BIOS-/EFI-Variablen oder LUKS-Slots ändern, ohne vorher
   zu erklären, was passiert, und Noahs ausdrückliches OK abzuwarten.
 - Lieber deklarativ in der Config lösen als imperativ (`nix-env`, manuelle Dateien in `~/.config`).
