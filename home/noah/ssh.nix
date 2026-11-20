@@ -12,6 +12,10 @@
     enable = true;
     enableDefaultConfig = false;
 
+    # Private Ergänzungen, die NICHT ins öffentliche Repo gehören (z. B. Server-Adressen).
+    # Die Dateien legst du von Hand an, sie werden nicht versioniert.
+    includes = [ "~/.ssh/config.d/*" ];
+
     # Freiform: Schlüssel = Host-Pattern, Werte = OpenSSH-Direktiven (siehe `man ssh_config`)
     settings = {
       "*" = {
@@ -25,12 +29,13 @@
         User = "git";
       };
 
-      # TODO: Server eintragen, danach reicht `ssh homeserver`
-      # "homeserver" = {
-      #   HostName = "192.168.1.10"; # oder Domain / öffentliche IP
-      #   User = "noah";
-      #   Port = 22;
-      # };
+      # Eigener Server: `ssh server`. Die Adresse (HostName) steht privat in
+      # ~/.ssh/config.d/server, damit sie nicht im öffentlichen Repo landet:
+      #   Host server
+      #     HostName <IP oder Domain>
+      "server" = {
+        User = "noah";
+      };
     };
   };
 }
