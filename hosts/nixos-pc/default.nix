@@ -22,7 +22,7 @@
 
   # Secure Boot über Lanzaboote. Erst NACH der Installation einschalten,
   # wenn die Schlüssel existieren (docs/INSTALL.md, Teil D).
-  my.secureBoot.enable = false;
+  my.secureBoot.enable = true;
 
   # NICHT ändern, nachdem das System installiert ist!
   # Muss zur Version des Installations-ISOs passen (siehe docs/INSTALL.md).
