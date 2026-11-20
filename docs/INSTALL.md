@@ -246,8 +246,16 @@ Neustart ins BIOS (`systemctl reboot --firmware-setup` geht direkt dorthin):
 ### D4. Schlüssel registrieren
 ```bash
 sudo sbctl status                     # muss "Setup Mode: ✓ Enabled" zeigen
-sudo sbctl enroll-keys --microsoft    # --microsoft ist PFLICHT (Windows + Grafikkarten-ROM)
+sudo sbctl enroll-keys --microsoft --firmware-builtin
+# --microsoft ist PFLICHT (Windows + Grafikkarten-ROM),
+# --firmware-builtin behält zusätzlich die Hersteller-Schlüssel des Mainboards
 ```
+> Meldet sbctl `File is immutable: /sys/firmware/efi/efivars/KEK-…` bzw. `db-…`: Der Kernel
+> schützt vorhandene EFI-Variablen. Schutz für genau die genannten Dateien aufheben und erneut
+> ausführen: `sudo chattr -i /sys/firmware/efi/efivars/KEK-<…> /sys/firmware/efi/efivars/db-<…>`.
+> Nicht `--yes-this-might-brick-my-machine` verwenden.
+>
+> War die Firmware schon im Setup Mode (`sbctl status` → `Setup Mode: Enabled`), entfällt D3.
 Neustart. Danach:
 ```bash
 bootctl status | grep -i "secure boot"    # -> enabled (user)
